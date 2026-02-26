@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body onload="protectPage()">
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>Pharmacy</h2>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="medicines.html">Medicines</a>
+    <a href="billing.html">Billing</a>
+    <a href="purchase.html">Purchase</a>
+    <a href="suppliers.html">Suppliers</a>
+    <a href="#" onclick="logout()">Logout</a>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+    <h2>Dashboard</h2>
+
+    <div class="card">
+      <h3>Total Medicines</h3>
+      <p id="totalMedicines">Loading...</p>
+    </div>
+
+    <div class="card">
+      <h3>Total Sales</h3>
+      <p id="totalSales">Loading...</p>
+    </div>
+
+    <div class="card">
+      <h3>Total Stock Value</h3>
+      <p id="totalStockValue">Loading...</p>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="js/app.js"></script>
+
+<script>
+async function loadDashboard() {
+
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  try {
+    const res = await fetch("http://localhost:5000/dashboard", {
+      headers: {
+        "Authorization": "Bearer " + token
+      }
+    });
+
+    const data = await res.json();
+
+    document.getElementById("totalMedicines").innerText = data.totalMedicines;
+    document.getElementById("totalSales").innerText = data.totalSales;
+    document.getElementById("totalStockValue").innerText = data.totalStockValue;
+
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+loadDashboard();
+</script>
+
+</body>
+</html>

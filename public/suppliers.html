@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Suppliers</title>
+  <link rel="stylesheet" href="css/style.css">
+
+  <style>
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+      background: white;
+      padding: 20px;
+      width: 350px;
+      margin: 10% auto;
+      border-radius: 8px;
+    }
+
+    .modal-buttons {
+      margin-top: 15px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .secondary-btn {
+      background: #6b7280;
+    }
+
+    .danger-btn {
+      background: #dc2626;
+    }
+  </style>
+</head>
+
+<body onload="protectPage(); loadSuppliers()">
+
+<div class="layout">
+
+<div class="sidebar">
+  <h2>Pharmacy</h2>
+  <a href="dashboard.html">Dashboard</a>
+  <a href="medicines.html">Medicines</a>
+  <a href="billing.html">Billing</a>
+  <a href="purchase.html">Purchase</a>
+  <a href="suppliers.html">Suppliers</a>
+  <a href="#" onclick="logout()">Logout</a>
+</div>
+
+<div class="main">
+
+  <h2>Add Supplier</h2>
+
+  <div class="card">
+    <input id="name" placeholder="Supplier Name">
+    <input id="phone" placeholder="Phone Number">
+    <input id="address" placeholder="Address">
+    <input id="gst" placeholder="GST Number">
+    <button onclick="openConfirmModal()">Add Supplier</button>
+  </div>
+
+  <h2>Supplier List</h2>
+
+  <div class="card">
+    <table border="1" width="100%" cellpadding="8">
+      <thead>
+        <tr>
+          <th>SL No</th>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Address</th>
+          <th>GST</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody id="supplierTable"></tbody>
+    </table>
+  </div>
+
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="confirmModal">
+  <div class="modal-content">
+    <h3>Confirm Supplier Details</h3>
+
+    <p><strong>Name:</strong> <span id="previewName"></span></p>
+    <p><strong>Phone:</strong> <span id="previewPhone"></span></p>
+    <p><strong>Address:</strong> <span id="previewAddress"></span></p>
+    <p><strong>GST:</strong> <span id="previewGst"></span></p>
+
+    <div class="modal-buttons">
+      <button onclick="confirmSave()">Confirm / Save</button>
+      <button class="secondary-btn" onclick="closeModal()">Edit</button>
+      <button class="danger-btn" onclick="cancelModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+
+<script>
+
+let tempSupplier = null;
+
+// OPEN MODAL
+function openConfirmModal() {
+
+  tempSupplier = {
+    name: name.value,
+    phone: phone.value,
+    address: address.value,
+    gst: gst.value
+  };
+
+  previewName.innerText = tempSupplier.name;
+  previewPhone.innerText = tempSupplier.phone;
+  previewAddress.innerText = tempSupplier.address;
+  previewGst.innerText = tempSupplier.gst;
+
+  confirmModal.style.display = "block";
+}
+
+// CLOSE MODAL (EDIT)
+function closeModal() {
+  confirmModal.style.display = "none";
+}
+
+// CANCEL BUTTON
+function cancelModal() {
+  confirmModal.style.display = "none";
+  clearForm();
+}
+
+// CLEAR FORM
+function clearForm() {
+  name.value = "";
+  phone.value = "";
+  address.value = "";
+  gst.value = "";
+}
+
+// CONFIRM SAVE
+async function confirmSave() {
+
+  const token = localStorage.getItem("token");
+
+  try {
+    await fetch("http://localhost:5000/suppliers/add", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token
+      },
+      body: JSON.stringify(tempSupplier)
+    });
+
+  } catch (err) {
+    console.log(err);
+  }
+
+  confirmModal.style.display = "none";
+  clearForm();
+  loadSuppliers();
+}
+
+// LOAD SUPPLIERS
+async function loadSuppliers() {
+
+  const token = localStorage.getItem("token");
+
+  const res = await fetch("http://localhost:5000/suppliers", {
+    headers: {
+      "Authorization": "Bearer " + token
+    }
+  });
+
+  const data = await res.json();
+
+  supplierTable.innerHTML = "";
+
+  data.forEach((supplier, index) => {
+
+    const date = new Date(supplier.createdAt).toLocaleDateString();
+
+    supplierTable.innerHTML += `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${supplier.name}</td>
+        <td>${supplier.phone || ""}</td>
+        <td>${supplier.address || ""}</td>
+        <td>${supplier.gst || ""}</td>
+        <td>${date}</td>
+      </tr>
+    `;
+  });
+}
+
+</script>
+
+</body>
+</html>
